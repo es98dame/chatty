@@ -69,17 +69,26 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		const messages = [
-			{ role: 'system', content: prompt },
 			...reqMessages
 		]
-		const stream = await openai.beta.threads.createAndRun({
-			assistant_id: ASSISTANT_ID,
-			thread: {
-				messages
-			},
-			stream: true
+		const streamthread = await openai.beta.threads.create();
+		await openai.beta.threads.messages.create(streamthread.id, {
+			role: 'user',
+			content: messages[messages.length - 1].content
 		});
 
+		// Initialize storage for this thread if not already done
+if (!streamthread[streamthread.id]) {
+	streamthread[streamthread.id] = { events: [], clients: [] };
+  }
+
+		// create a run
+		const stream = await openai.beta.threads.runs.create(
+			streamthread.id,
+			{assistant_id: ASSISTANT_ID, stream:true}
+		);
+
+		console.log(stream);
 		const encoder = new TextEncoder();
 		const readableStream = new ReadableStream({
 			start(controller) {
