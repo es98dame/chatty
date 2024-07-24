@@ -32,14 +32,17 @@ console.log('stream started');
         const stream = new ReadableStream({
             start(controller) {
                 console.log('stream started');
-                run.on('textCreated', text => {
-                    controller.enqueue(`data: {"type":"textCreated","content":"${text.value}"}\n\n`);
-                });
+                // run.on('textCreated', text => {
+                //     console.log('textCreated' , text.value);
+                //     return controller.enqueue(`data: {"type":"textCreated","content":"${text.value}"}\n\n`);
+                // });
                 run.on('textDelta', (textDelta, snapshot) => {
-                    controller.enqueue(`data: {"type":"textDelta","content":"${textDelta.value}"}\n\n`);
+                    console.log('textDelta' , textDelta.value);
+                    return controller.enqueue(`data: {"type":"textDelta","content":"${textDelta.value}"}\n\n`);
                 });
                 run.on('toolCallCreated', toolCall => {
-                    controller.enqueue(`data: {"type":"toolCall","content":"${toolCall.type}"}\n\n`);
+                    console.log('toolCallCreated' , toolCall.type);
+                    return controller.enqueue(`data: {"type":"toolCall","content":"${toolCall.type}"}\n\n`);
                 });
                 run.on('toolCallDelta', (toolCallDelta, snapshot) => {
                     if (toolCallDelta.type === 'code_interpreter') {
@@ -51,6 +54,7 @@ console.log('stream started');
                     }
                 });
                 run.on('end', () => {
+                    controller.enqueue('event: end\ndata: {}\n\n');
                     controller.close();
                 });
                 run.on('error', (err) => {
